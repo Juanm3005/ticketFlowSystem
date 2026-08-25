@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import "./AdminPage.css";
 import { useNavigate } from "react-router-dom";
-import { deleteUser, updateUserRole, createUserByAdmin } from "../services/api";
-import { createTicket } from "../services/api";
+import { deleteUser, updateUserRole, createUserByAdmin, changeTicketState, createTicket, deleteTicket, getTicketAudit } from "../services/api";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+
 
 function AdminDashboard() {
 
@@ -15,6 +16,7 @@ function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [openTickets, setOpenTickets] = useState(null);
     const [inProgressTickets, setInProgressTickets] = useState(null);
+    const [resolvedTickets, setResolvedTickets] = useState(null);
     const [closedTickets, setClosedTickets] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newUsername, setNewUsername] = useState("");
@@ -26,6 +28,102 @@ function AdminDashboard() {
     const [showCreateTicketForm, setShowCreateTicketForm] = useState(false);
     const [newTicketTitle, setNewTicketTitle] = useState("");
     const [newTicketDescription, setNewTicketDescription] = useState("");
+    const [tickets, setTickets] = useState([]);
+    const [selectedTickets, setSelectedTickets] = useState([]);
+    const [ticketSearchTerm, setTicketSearchTerm] = useState("");
+    const [ticketStateSelections, setTicketStateSelections] = useState({});
+    const [statusFilter, setStatusFilter] = useState("ALL");
+    const [recentActivity, setRecentActivity] = useState([]);
+
+    const ticketStatusData = [
+        { name: "Open", value: openTickets || 0, color: "#3B82F6" },
+        { name: "In Progress", value: inProgressTickets || 0, color: "#F59E0B" },
+        { name: "Resolved", value: resolvedTickets || 0, color: "#F97316" },
+        { name: "Closed", value: closedTickets || 0, color: "#22C55E" },
+    ];
+
+    function handleClearTicketFilters() {
+        setTicketSearchTerm("");
+        setStatusFilter("ALL");
+    }
+
+    function setTicketStateSelection(ticketId, value) {
+        setTicketStateSelections(prev => ({
+            ...prev,
+            [ticketId]: value
+        }));
+    }
+
+    async function handleExecuteStateChange(ticket) {
+        const newState = ticketStateSelections[ticket.id];
+        if (!newState) return alert("Select a new state to change.");
+
+        try {
+            await changeTicketState(ticket.id, newState);
+
+            setTickets(prev => {
+                const updated = prev.map(t => t.id === ticket.id ? { ...t, state: newState } : t);
+                setOpenTickets(updated.filter(t => t.state === "OPEN").length);
+                setInProgressTickets(updated.filter(t => t.state === "IN_PROGRESS").length);
+                setResolvedTickets(updated.filter(t => t.state === "RESOLVED").length);
+                setClosedTickets(updated.filter(t => t.state === "CLOSED").length);
+                return updated;
+            });
+        } catch (error) {
+            console.error(error);
+            alert("no have permission to change the state of this ticket1");
+        }
+    }
+
+    async function handleChangeTicketState(id, newState) {
+        try {
+            await changeTicketState(id, newState);
+            setTickets(prev =>
+                prev.map(t => t.id === id ? { ...t, state: newState } : t)
+            );
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+    }
+
+    const filteredTickets = tickets.filter(ticket => {
+        const matchesSubject = ticket.title.toLowerCase().includes(ticketSearchTerm.toLowerCase());
+        const matchesStatus = statusFilter === "ALL" || ticket.state === statusFilter;
+        return matchesSubject && matchesStatus;
+    });
+
+    async function handleDeleteSelected() {
+        if (selectedTickets.length === 0) return;
+        if (!window.confirm(`¿Eliminar ${selectedTickets.length} ticket(s)?`)) return;
+
+        try {
+            await Promise.all(selectedTickets.map(id => deleteTicket(id)));
+
+            setTickets(prev => prev.filter(t => !selectedTickets.includes(t.id)));
+            setTotalTickets(prev => prev - selectedTickets.length);
+            setSelectedTickets([]);
+        } catch (error) {
+            console.error(error);
+            alert("Error al eliminar algunos tickets");
+        }
+    }
+
+    function toggleTicketSelection(id) {
+        setSelectedTickets(prev =>
+            prev.includes(id)
+                ? prev.filter(ticketId => ticketId !== id)
+                : [...prev, id]
+        );
+    }
+
+    function toggleSelectAll() {
+        if (selectedTickets.length === tickets.length) {
+            setSelectedTickets([]);
+        } else {
+            setSelectedTickets(tickets.map(t => t.id));
+        }
+    }
 
     async function handleCreateTicket(e) {
         e.preventDefault();
@@ -33,7 +131,7 @@ function AdminDashboard() {
             const createdTicket = await createTicket({
                 title: newTicketTitle,
                 description: newTicketDescription,
-                status: "OPEN" // ajusta si tu backend requiere/espera otro valor inicial
+                status: "OPEN" 
             });
 
             setTotalTickets(prev => prev + 1);
@@ -119,6 +217,19 @@ function AdminDashboard() {
     });
 
     useEffect(() => {
+        const fetchRecentActivity = async () => {
+            try {
+                const data = await getTicketAudit();
+                setRecentActivity(data.slice(0, 10));
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchRecentActivity();
+    }, []);
+
+    useEffect(() => {
         const fetchTotalUsers = async () => {
 
             try {
@@ -162,12 +273,15 @@ function AdminDashboard() {
 
                 const data = await res.json();
                 setTotalTickets(data.length);
-                const openTickets = data.filter(ticket => ticket.status === "OPEN");
+                const openTickets = data.filter(ticket => ticket.state === "OPEN");
                 setOpenTickets(openTickets.length);//para tickets abiertos
-                const inProgressTickets = data.filter(ticket => ticket.status === "IN_PROGRESS");
+                const inProgressTickets = data.filter(ticket => ticket.state === "IN_PROGRESS");
+                const resolvedTickets = data.filter(ticket => ticket.state === "RESOLVED");
+                setResolvedTickets(resolvedTickets.length);
                 setInProgressTickets(inProgressTickets.length);//para tickets en progreso
-                const closedTickets = data.filter(ticket => ticket.status === "CLOSED");
+                const closedTickets = data.filter(ticket => ticket.state === "CLOSED");
                 setClosedTickets(closedTickets.length);//para tickets cerrados
+                setTickets(data); // Guarda todos los tickets en el estado
 
             } catch (error) {
                 console.error(error);
@@ -185,43 +299,55 @@ function AdminDashboard() {
      * mientras el usuario hace scroll.
      */
     useEffect(() => {
-        const sections = document.querySelectorAll(".dashboard-section");
+    const container = document.querySelector(".dashboard-content");
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveSection(entry.target.id);
-                    }
-                });
-            },
-            {
-                root: null,
-                threshold: 0.25,
-                rootMargin: "-10% 0px -60% 0px"
+    if (!container) return;
+
+    const sections = [
+        "dashboard",
+        "users",
+        "tickets",
+        "reports"
+    ];
+
+    function handleScroll() {
+        const scrollTop = container.scrollTop;
+
+        let currentSection = "dashboard";
+
+        sections.forEach((id) => {
+            const section = document.getElementById(id);
+
+            if (!section) return;
+
+            const sectionTop = section.offsetTop;
+
+            if (scrollTop >= sectionTop - 150) {
+                currentSection = id;
             }
-        );
-
-        sections.forEach((section) => {
-            observer.observe(section);
         });
 
-        return () => {
-            sections.forEach((section) => {
-                observer.unobserve(section);
-            });
-        };
-    }, []);
-
-    function scrollToSection(sectionId) {
-        const section = document.getElementById(sectionId);
-        if (section) {
-            section.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-        }
+        setActiveSection(currentSection);
     }
+
+    container.addEventListener("scroll", handleScroll);
+
+    handleScroll();
+
+    return () => {
+        container.removeEventListener("scroll", handleScroll);
+    };
+}, []);
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+
+    if (section) {
+        section.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+}
     return (
 
         <div className="admin-layout">
@@ -289,19 +415,6 @@ function AdminDashboard() {
                         Reports
                     </button>
 
-
-                    <button
-                        className={
-                            activeSection === "settings"
-                                ? "sidebar-item active"
-                                : "sidebar-item"
-                        }
-                        onClick={() => scrollToSection("settings")}
-                    >
-                        <span>⚙</span>
-                        Settings
-                    </button>
-
                 </nav>
 
 
@@ -336,17 +449,10 @@ function AdminDashboard() {
 
                     <div className="header-actions">
 
-                        <button className="notification-button">
-                            ♧
-                            <span>0</span>
-                        </button>
+                   
 
 
                         <div className="admin-profile">
-
-                            <div className="profile-avatar">
-                                A
-                            </div>
 
                             <div className="profile-info">
 
@@ -354,15 +460,9 @@ function AdminDashboard() {
                                     Admin
                                 </strong>
 
-                                <small>
-                                    Super Admin
-                                </small>
 
                             </div>
 
-                            <span className="profile-arrow">
-                                ⌄
-                            </span>
 
                         </div>
 
@@ -948,7 +1048,7 @@ function AdminDashboard() {
                                     <button className="create-ticket-button" onClick={() => setShowCreateTicketForm(true)}>
                                         + Create Ticket
                                     </button>
-                                    <button className="delete-selected">
+                                    <button className="delete-selected" onClick={handleDeleteSelected}>
                                         ♲ Delete Selected
                                     </button>
                                 </div>
@@ -964,27 +1064,23 @@ function AdminDashboard() {
 
                                     <input
                                         type="text"
-                                        placeholder="Search tickets..."
+                                        placeholder="Search tickets by subject"
+                                        value={ticketSearchTerm}
+                                        onChange={(e) => setTicketSearchTerm(e.target.value)}
                                     />
 
                                 </div>
 
 
-                                <select>
-                                    <option>
-                                        All Statuses
-                                    </option>
+                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                    <option value="ALL">All Statuses</option>
+                                    <option value="OPEN">OPEN</option>
+                                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                    <option value="RESOLVED">RESOLVED</option>
+                                    <option value="CLOSED">CLOSED</option>
                                 </select>
 
-
-                                <select>
-                                    <option>
-                                        All Requesters
-                                    </option>
-                                </select>
-
-
-                                <button className="filter-button">
+                                <button className="filter-button" onClick={handleClearTicketFilters}>
                                     ↻ Clear Filters
                                 </button>
 
@@ -1000,44 +1096,64 @@ function AdminDashboard() {
                                     <thead>
                                         <tr>
                                             <th>
-                                                <input type="checkbox" />
+                                                <input
+                                                    type="checkbox"
+                                                    checked={tickets.length > 0 && selectedTickets.length === tickets.length}
+                                                    onChange={toggleSelectAll}
+                                                />
                                             </th>
-
-                                            <th>
-                                                ID
-                                            </th>
-
-                                            <th>
-                                                Subject
-                                            </th>
-
-                                            <th>
-                                                Requester
-                                            </th>
-
-                                            <th>
-                                                Status
-                                            </th>
-
-                                            <th>
-                                                Created At
-                                            </th>
-
-                                            <th>
-                                                Actions
-                                            </th>
+                                            <th>ID</th>
+                                            <th>Subject</th>
+                                            <th>Created By</th>
+                                            <th>Status</th>
+                                            <th>Assigned To</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
 
-
                                     <tbody>
-                                        <tr>
-                                            <td colSpan="7">
-                                                <div className="empty-table">
-                                                    No tickets to display
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        {filteredTickets.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7">
+                                                    <div className="empty-table">
+                                                        No tickets to display
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            tickets.map((ticket) => (
+                                                <tr key={ticket.id}>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedTickets.includes(ticket.id)}
+                                                            onChange={() => toggleTicketSelection(ticket.id)}
+                                                        />
+                                                    </td>
+                                                    <td>{ticket.id}</td>
+                                                    <td>{ticket.title}</td>
+                                                    <td>{ticket.createdBy.username}</td>
+                                                    <td>{ticket.state}</td>
+                                                    <td>{ticket.assignedTo?.username || "Unassigned"}</td>
+                                                    <td>
+                                                        <select
+                                                            value={ticketStateSelections[ticket.id] || ticket.state}
+                                                            onChange={(e) => setTicketStateSelection(ticket.id, e.target.value)}
+                                                            className="action-select"
+                                                        >
+                                                            <option value="OPEN">OPEN</option>
+                                                            <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                                            <option value="RESOLVED">RESOLVED</option>
+                                                            <option value="CLOSED">CLOSED</option>
+                                                        </select>
+
+                                                        <button onClick={() => handleExecuteStateChange(ticket)} className="execute-button">
+                                                            Execute
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
 
                                 </table>
@@ -1105,17 +1221,61 @@ function AdminDashboard() {
                                     Tickets by Status
                                 </h2>
 
-                                <div className="empty-chart">
+                                <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
 
-                                    <span>
-                                        Chart
-                                    </span>
+                                    <div style={{ position: "relative", width: 200, height: 200 }}>
+                                        <PieChart width={200} height={200}>
+                                            <Pie
+                                                data={ticketStatusData}
+                                                dataKey="value"
+                                                nameKey="name"
+                                                innerRadius={60}
+                                                outerRadius={90}
+                                                paddingAngle={2}
+                                            >
+                                                {ticketStatusData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+
+                                        <div style={{
+                                            position: "absolute",
+                                            top: "50%",
+                                            left: "50%",
+                                            transform: "translate(-50%, -50%)",
+                                            textAlign: "center"
+                                        }}>
+                                            <div style={{ fontSize: "24px", fontWeight: "bold" }}>
+                                                {totalTickets || 0}
+                                            </div>
+                                            <div style={{ fontSize: "12px", color: "#666" }}>
+                                                Total
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                        {ticketStatusData.map((entry) => (
+                                            <div key={entry.name} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <span style={{
+                                                    width: 10,
+                                                    height: 10,
+                                                    borderRadius: "50%",
+                                                    backgroundColor: entry.color,
+                                                    display: "inline-block"
+                                                }} />
+                                                <span>
+                                                    {entry.name}: {entry.value} ({totalTickets > 0 ? ((entry.value / totalTickets) * 100).toFixed(1) : 0}%)
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
 
                                 </div>
 
                             </div>
-
-
 
                             <div className="side-card report-card">
 
@@ -1124,9 +1284,22 @@ function AdminDashboard() {
                                 </h2>
 
                                 <div className="empty-activity">
-
-                                    {/* ACTIVIDAD DEL SISTEMA */}
-
+                                    {recentActivity.map((entry, index) => (
+                                        <div
+                                            key={entry.ID}
+                                            style={{
+                                                padding: "12px 4px",
+                                                borderBottom: index < recentActivity.length - 1 ? "1px solid #e5e7eb" : "none"
+                                            }}
+                                        >
+                                            <p style={{ fontSize: "15px", fontWeight: 500, marginBottom: "4px" }}>
+                                                Ticket #{entry.TICKET_ID}: {entry.OLD_STATE || "N/A"} → {entry.NEW_STATE}
+                                            </p>
+                                            <small style={{ fontSize: "13px", color: "#6b7280" }}>
+                                                {entry.CHANGED_BY} — {new Date(entry.CHANGED_AT).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    ))}
                                 </div>
 
                             </div>
@@ -1135,39 +1308,6 @@ function AdminDashboard() {
                         </div>
 
                     </section>
-
-
-
-                    {/* SETTINGS*/}
-
-                    <section
-                        id="settings"
-                        className="dashboard-section"
-                    >
-
-                        <div className="section-title">
-
-                            <h2>
-                                Settings
-                            </h2>
-
-                            <p>
-                                Configure your TicketFlow system.
-                            </p>
-
-                        </div>
-
-
-                        <div className="dashboard-card settings-placeholder">
-
-                            <span>
-                                Settings
-                            </span>
-
-                        </div>
-
-                    </section>
-
 
                 </div>
 

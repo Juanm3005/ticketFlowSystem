@@ -3,6 +3,7 @@ package com.juanm.ticketflow.service;
 import com.juanm.ticketflow.model.Ticket;
 import com.juanm.ticketflow.model.TicketState;
 import com.juanm.ticketflow.model.User;
+import com.juanm.ticketflow.model.UserRole;
 import com.juanm.ticketflow.repository.TicketRepository;
 import com.juanm.ticketflow.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,24 +39,20 @@ public class TicketService {
         ticketRepository.deleteById(id);
     }
 
-    public List<Ticket> listTickets(TicketState stateFilter) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName();
+    public List<Ticket> listTicketsForUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean isEmployee = auth.getAuthorities().stream()
-                .noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_TECHNICIAN"));
-
-        if (isEmployee) {
-            if (stateFilter != null) {
-                return ticketRepository.findByCreatedBy_EmailAndState(email, stateFilter);
-            }
-            return ticketRepository.findByCreatedBy_Email(email);
+        if (user.getRole() == UserRole.ADMIN) {
+            return ticketRepository.findAll();
         }
 
-        if (stateFilter != null) {
-            return ticketRepository.findByState(stateFilter);
+        if (user.getRole() == UserRole.TECHNICIAN) {
+            return ticketRepository.findByAssignedToIsNullOrAssignedTo(user);
         }
-        return ticketRepository.findAll();
+
+
+        return ticketRepository.findByCreatedBy(user);
     }
 
     public Ticket changeState(Long id, TicketState newState) {

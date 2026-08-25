@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/tickets")
@@ -22,8 +23,9 @@ public class TicketController {
     }
 
     @GetMapping
-    public List<Ticket> list(@RequestParam(required = false) TicketState state) {
-        return ticketService.listTickets(state);
+    public List<Ticket> list(Authentication authentication) {
+        String email = authentication.getName(); // el email del usuario autenticado
+        return ticketService.listTicketsForUser(email);
     }
 
     @PatchMapping("/{id}/state")

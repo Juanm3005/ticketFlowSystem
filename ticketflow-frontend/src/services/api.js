@@ -14,6 +14,8 @@ export async function getCurrentUser() {
     return response.json();
 }
 
+
+
 export async function createTicket(ticketData) {
     const response = await fetch(`${API_URL}/tickets`, {
         method: "POST",
@@ -68,6 +70,33 @@ export async function deleteUser(id) {
     if (!response.ok) throw new Error("Error to delete user");
 }
 
+export async function deleteTicket(id) {
+    const response = await fetch(`${API_URL}/tickets/${id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: localStorage.getItem("authHeader"),
+        },
+    });
+}
+
+export async function changeTicketState(id, newState) {
+    const response = await fetch(`${API_URL}/tickets/${id}/state`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("authHeader"),
+        },
+        body: JSON.stringify(newState),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Error changing ticket state");
+    }
+
+    return response.json();
+}
+
 async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -86,6 +115,17 @@ async function handleSubmit(e) {
     } catch {
         setError('Invalid email or password. Please try again.');
     }
+}
+
+export async function getTicketAudit() {
+    const response = await fetch(`${API_URL}/ticket-audit`, {
+        headers: {
+            Authorization: localStorage.getItem("authHeader"),
+        },
+    });
+
+    if (!response.ok) throw new Error("Error al obtener actividad reciente");
+    return response.json();
 }
 
 export function getAuthHeader(email, password) {
