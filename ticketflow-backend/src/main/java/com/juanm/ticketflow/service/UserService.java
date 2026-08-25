@@ -22,6 +22,24 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User createUserByAdmin(User user, UserRole role) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(role);
+        return userRepository.save(user);
+    }
+
     public User register(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(UserRole.EMPLOYEE); // siempre, sin importar qué mande el cliente

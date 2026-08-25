@@ -1,11 +1,99 @@
 const API_URL = 'http://localhost:8080';
 
+export async function getCurrentUser() {
+    const response = await fetch(`${API_URL}/users/me`, {
+        headers: {
+            Authorization: localStorage.getItem("authHeader"),
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Session expired");
+    }
+
+    return response.json();
+}
+
+export async function createTicket(ticketData) {
+    const response = await fetch(`${API_URL}/tickets`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("authHeader"),
+        },
+        body: JSON.stringify(ticketData),
+    });
+
+    if (!response.ok) throw new Error("Error al crear ticket");
+    return response.json();
+}
+
+export async function updateUserRole(email, role) {
+    const response = await fetch(`${API_URL}/users/${email}/role`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("authHeader"),
+        },
+        body: JSON.stringify(role), 
+    });
+
+    if (!response.ok) throw new Error("Error to update user role");
+    return response.json();
+}
+
+export async function createUserByAdmin(username, email, password, role) {
+    const response = await fetch(`${API_URL}/users/admin-create`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("authHeader"),
+        },
+        body: JSON.stringify({ username, email, password, role }),
+    });
+
+    if (!response.ok) throw new Error("Error to create user by admin");
+    return response.json();
+}
+
+
+export async function deleteUser(id) {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: localStorage.getItem("authHeader"),
+        },
+    });
+
+    if (!response.ok) throw new Error("Error to delete user");
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    try {
+        const user = await login(email, password);
+
+        // Guarda el header Basic para reutilizarlo en otras peticiones
+        const authHeader = getAuthHeader(email, password);
+        localStorage.setItem("authHeader", authHeader);
+
+        onLoginSuccess(user);
+
+        if (user.role === 'ADMIN') navigate('/admin');
+        else if (user.role === 'TECHNICIAN') navigate('/technician');
+        else navigate('/employee');
+    } catch {
+        setError('Invalid email or password. Please try again.');
+    }
+}
+
 export function getAuthHeader(email, password) {
     return 'Basic ' + btoa(`${email}:${password}`);
 }
 
 export async function login(email, password) {
-    const response = await fetch(`${API_URL}/tickets`, {
+    const response = await fetch(`${API_URL}/users/me`, {
         headers: {
             Authorization: getAuthHeader(email, password),
         },
@@ -15,7 +103,7 @@ export async function login(email, password) {
         throw new Error('Invalid credentials');
     }
 
-    return true;
+    return response.json();
 }
 
 export async function register(username, email, password) {
