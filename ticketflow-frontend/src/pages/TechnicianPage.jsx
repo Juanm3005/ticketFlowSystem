@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./TechnicianPage.css";
 import { useNavigate } from "react-router-dom";
-import {changeTicketState, createTicket, } from "../services/api";
+import {changeTicketState, createTicket } from "../services/api";
 import { PieChart, Pie, Tooltip, Cell } from "recharts";
 
 

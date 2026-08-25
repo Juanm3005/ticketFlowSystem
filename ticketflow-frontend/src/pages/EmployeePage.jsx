@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./EmployeePage.css";
 import { useNavigate } from "react-router-dom";
-import {changeTicketState, createTicket, } from "../services/api";
+import {createTicket } from "../services/api";
 import { PieChart, Pie, Tooltip, Cell } from "recharts";
 
 
@@ -19,9 +19,7 @@ function EmployeeDashboard() {
     const [newTicketTitle, setNewTicketTitle] = useState("");
     const [newTicketDescription, setNewTicketDescription] = useState("");
     const [tickets, setTickets] = useState([]);
-    const [selectedTickets, setSelectedTickets] = useState([]);
     const [ticketSearchTerm, setTicketSearchTerm] = useState("");
-    const [ticketStateSelections, setTicketStateSelections] = useState({});
     const [statusFilter, setStatusFilter] = useState("ALL");
 
     
@@ -44,51 +42,6 @@ function EmployeeDashboard() {
     function handleClearTicketFilters() {
         setTicketSearchTerm("");
         setStatusFilter("ALL");
-    }
-
-    function setTicketStateSelection(ticketId, value) {
-        setTicketStateSelections(prev => ({
-            ...prev,
-            [ticketId]: value
-        }));
-    }
-
-    async function handleExecuteStateChange(ticket) {
-        const newState = ticketStateSelections[ticket.id];
-        if (!newState) return alert("Select a new state to change.");
-
-        try {
-            await changeTicketState(ticket.id, newState);
-
-            setTickets(prev => {
-                const updated = prev.map(t => t.id === ticket.id ? { ...t, state: newState } : t);
-                setOpenTickets(updated.filter(t => t.state === "OPEN").length);
-                setInProgressTickets(updated.filter(t => t.state === "IN_PROGRESS").length);
-                setResolvedTickets(updated.filter(t => t.state === "RESOLVED").length);
-                setClosedTickets(updated.filter(t => t.state === "CLOSED").length);
-                return updated;
-            });
-        } catch (error) {
-            console.error(error);
-            alert("no have permission to change the state of this ticket1");
-        }
-    }
-
-   
-    function toggleTicketSelection(id) {
-        setSelectedTickets(prev =>
-            prev.includes(id)
-                ? prev.filter(ticketId => ticketId !== id)
-                : [...prev, id]
-        );
-    }
-
-    function toggleSelectAll() {
-        if (selectedTickets.length === tickets.length) {
-            setSelectedTickets([]);
-        } else {
-            setSelectedTickets(tickets.map(t => t.id));
-        }
     }
 
     async function handleCreateTicket(e) {
@@ -460,19 +413,12 @@ function scrollToSection(sectionId) {
 
                                     <thead>
                                         <tr>
-                                            <th>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={tickets.length > 0 && selectedTickets.length === tickets.length}
-                                                    onChange={toggleSelectAll}
-                                                />
-                                            </th>
+                                            
                                             <th>ID</th>
                                             <th>Subject</th>
                                             <th>Created By</th>
                                             <th>Status</th>
                                             <th>Assigned To</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
 
@@ -488,34 +434,13 @@ function scrollToSection(sectionId) {
                                         ) : (
                                             tickets.map((ticket) => (
                                                 <tr key={ticket.id}>
-                                                    <td>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedTickets.includes(ticket.id)}
-                                                            onChange={() => toggleTicketSelection(ticket.id)}
-                                                        />
-                                                    </td>
+                                                
                                                     <td>{ticket.id}</td>
                                                     <td>{ticket.title}</td>
                                                     <td>{ticket.createdBy.username}</td>
                                                     <td>{ticket.state}</td>
                                                     <td>{ticket.assignedTo?.username || "Unassigned"}</td>
-                                                    <td>
-                                                        <select
-                                                            value={ticketStateSelections[ticket.id] || ticket.state}
-                                                            onChange={(e) => setTicketStateSelection(ticket.id, e.target.value)}
-                                                            className="action-select"
-                                                        >
-                                                            <option value="OPEN">OPEN</option>
-                                                            <option value="IN_PROGRESS">IN_PROGRESS</option>
-                                                            <option value="RESOLVED">RESOLVED</option>
-                                                            <option value="CLOSED">CLOSED</option>
-                                                        </select>
-
-                                                        <button onClick={() => handleExecuteStateChange(ticket)} className="execute-button">
-                                                            Execute
-                                                        </button>
-                                                    </td>
+                                                    
                                                 </tr>
                                             ))
                                         )}
@@ -526,25 +451,7 @@ function scrollToSection(sectionId) {
                             </div>
 
 
-                            <div className="table-footer">
-
-                                <div className="pagination">
-
-                                    <button>
-                                        ‹
-                                    </button>
-
-                                    <button className="selected">
-                                        1
-                                    </button>
-
-                                    <button>
-                                        ›
-                                    </button>
-
-                                </div>
-
-                            </div>
+                           
 
                         </div>
 
