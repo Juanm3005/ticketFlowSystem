@@ -41,37 +41,9 @@ TicketFlow permite a los empleados de una organización reportar incidencias té
 - Una instancia de Oracle Database accesible (local con Oracle XE, o en la nube con Oracle Cloud Free Tier)
 - El **Wallet** de conexión, si se usa una Autonomous Database en Oracle Cloud
 
-## Configuración del backend
-
-1. Clona el repositorio y abre la carpeta del backend en IntelliJ IDEA.
-
-2. Configura la conexión a la base de datos en `src/main/resources/application.properties`:
-
-   ```properties
-   spring.datasource.url=jdbc:oracle:thin:@<tu_alias_tns>?TNS_ADMIN=<ruta_al_wallet>
-   spring.datasource.username=<tu_usuario>
-   spring.datasource.password=<tu_password>
-   spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
-
-   spring.jpa.hibernate.ddl-auto=update
-   spring.jpa.show-sql=true
-   ```
-
-3. Si usas una Autonomous Database en la nube, descomprime el Wallet en `src/main/resources/wallet` y, en la configuración de ejecución de IntelliJ (**Edit Configurations → VM options**), agrega:
-
-   ```
-   -Dwallet_location=$MODULE_DIR$/src/main/resources/wallet
-   ```
-
-4. Ejecuta los scripts SQL de `database/` (tablas, triggers y procedimientos) contra tu instancia de Oracle antes de levantar la aplicación por primera vez.
-
-5. Corre la aplicación desde IntelliJ (▶️ sobre la clase principal) o con:
-
-   ```bash
-   mvn spring-boot:run
-   ```
-
-   El backend queda disponible en `http://localhost:8080`.
+## Backend
+1. Ejecuta el backend 
+El backend queda disponible en `http://localhost:8080`.
 
 ## Configuración del frontend
 
@@ -84,7 +56,7 @@ TicketFlow permite a los empleados de una organización reportar incidencias té
 2. Instala las dependencias:
 
    ```bash
-   npm install
+   npm install react-router-dom
    ```
 
 3. Levanta el servidor de desarrollo:
@@ -117,5 +89,9 @@ TicketFlow permite a los empleados de una organización reportar incidencias té
 | DELETE | `/tickets/{id}` | Eliminar un ticket | Admin |
 
 ## Notas
+
+Usuario Admin creado:
+correo: juanm3005@example.com
+contraseña: camilo3005
 
 Este es un proyecto académico/de práctica. Algunas decisiones (como el uso de HTTP Basic Auth en vez de JWT) se tomaron deliberadamente para mantener el enfoque en el aprendizaje del flujo completo antes que en la robustez de nivel productivo.
