@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { register } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import logo from "../assets/logo.png";
 import './Register.css';
 
 function Register() {
@@ -29,7 +30,7 @@ function Register() {
 
             <section className="register-left">
                 <div className="register-brand">
-                    <img src="src\assets\logo.png" alt="TicketFlow Logo" className="register-logo" />
+                    <img src={logo} alt="TicketFlow Logo" className="register-logo" />
                 </div>
 
                 <div className="register-hero">
