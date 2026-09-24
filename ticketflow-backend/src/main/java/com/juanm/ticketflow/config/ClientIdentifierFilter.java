@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,7 @@ import java.io.IOException;
 public class ClientIdentifierFilter extends OncePerRequestFilter {
 
     @Autowired
-    private ObjectProvider<AuditContextService> auditContextServiceProvider;
+    private AuditContextService auditContextService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -25,7 +24,6 @@ public class ClientIdentifierFilter extends OncePerRequestFilter {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {
-            AuditContextService auditContextService = auditContextServiceProvider.getObject();
             auditContextService.setClientIdentifier(auth.getName());
         }
 

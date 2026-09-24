@@ -1,7 +1,5 @@
 package com.juanm.ticketflow.controller;
 
-import com.juanm.ticketflow.model.Ticket;
-import com.juanm.ticketflow.model.TicketState;
 import com.juanm.ticketflow.model.User;
 import com.juanm.ticketflow.model.UserRole;
 import com.juanm.ticketflow.service.UserService;

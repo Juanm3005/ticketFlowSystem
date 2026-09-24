@@ -14,7 +14,7 @@ public class AuditContextService {
     @Transactional
     public void setClientIdentifier(String email) {
         entityManager.createNativeQuery(
-                "BEGIN DBMS_SESSION.SET_IDENTIFIER(?); END;"
-        ).setParameter(1, email).executeUpdate();
+                "SELECT set_config('app.current_user_email', :email, false)"
+        ).setParameter("email", email).getSingleResult();
     }
 }
