@@ -1,14 +1,14 @@
 package com.juanm.ticketflow.service;
 
 import jakarta.persistence.EntityManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuditContextService {
 
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
 
     @Transactional
