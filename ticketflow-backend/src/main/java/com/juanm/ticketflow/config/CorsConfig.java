@@ -14,7 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://ticket-flow-system.vercel.app/")
+                        .allowedOriginPatterns("https://ticket-flow-system.vercel.app","https://ticket-flow-system-m4zunrrup-juan-s-team6.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
