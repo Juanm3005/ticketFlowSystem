@@ -1,30 +1,95 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/*
+ * Tailwind sin Preflight: el diseño original depende de los estilos por
+ * defecto del navegador (márgenes de h2/p, fuente de los botones, etc.),
+ * así que solo se importan el tema y las utilidades.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* :hover simple, como en el CSS original (sin @media (hover: hover)) */
+@custom-variant hover (&:hover);
+
+/* Breakpoints "max-width" equivalentes a los media queries originales */
+@custom-variant xl-down (@media (max-width: 1250px));
+@custom-variant lg-down (@media (max-width: 1000px));
+@custom-variant md-down (@media (max-width: 900px));
+@custom-variant sm-down (@media (max-width: 600px));
+@custom-variant xs-down (@media (max-width: 500px));
+
+@theme {
+    --color-brand: #5865f2;
+    --color-brand-hover: #4752c4;
+    --color-ink: #10182c;
+    --color-muted: #68738a;
+    --color-accent: #2850e8;
+    --color-line: #e8ebf2;
+    --color-field: #dce1ea;
+
+    --shadow-card: 0 3px 12px rgba(28, 43, 75, 0.03);
+    --shadow-modal: 0 20px 50px rgba(15, 23, 42, 0.20);
+    --shadow-focus: 0 0 0 3px rgba(88, 101, 242, 0.10);
+    --shadow-brand: 0 4px 10px rgba(88, 101, 242, 0.20);
+
+    --default-transition-duration: 200ms;
+    --default-transition-timing-function: ease;
+
+    --animate-modal-appear: modal-appear 0.2s ease-out;
+
+    @keyframes modal-appear {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
 }
 
-html,body,#root {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+@utility font-inherit {
+    font-family: inherit;
 }
 
-html,body {
-    overflow: hidden;
+@utility bg-auth-hero {
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.9) 0, rgba(255, 255, 255, 0) 35%),
+        linear-gradient(135deg, #f7f9ff 0%, #eef2ff 100%);
 }
 
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f5f7ff;
+@utility bg-auth-dots {
+    background-image: radial-gradient(#b8c9ff 3px, transparent 3px);
+    background-size: 16px 16px;
 }
 
-img {
-    display: block;
-    max-width: 100%;
+@utility bg-sidebar {
+    background: linear-gradient(180deg, #101b34 0%, #15213d 100%);
 }
 
-button, input, textarea, select {
-    font: inherit;
+@layer base {
+    html,
+    body,
+    #root {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-width: 0;
+        min-height: 100%;
+        box-sizing: border-box;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f6f8fc;
+        overflow-x: hidden;
+    }
 }

@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { login, getAuthHeader } from "../services/api";
-import "./Login.css";
-import logo from "../assets/logo.png";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import AuthLayout from "./auth/AuthLayout";
+import AuthInput from "./auth/AuthInput";
+import AuthError from "./auth/AuthError";
+import AuthSubmitButton from "./auth/AuthSubmitButton";
+import AuthFooterLink from "./auth/AuthFooterLink";
+import LockIcon from "./icons/LockIcon";
 
 function Login({ onLoginSuccess }) {
     const navigate = useNavigate();
@@ -10,84 +14,66 @@ function Login({ onLoginSuccess }) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    
-async function handleSubmit(e) {
-    e.preventDefault();
-    setError('');
-    try {
-        const user = await login(email, password);
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setError('');
+        try {
+            const user = await login(email, password);
 
-        const authHeader = getAuthHeader(email, password);
-        localStorage.setItem("authHeader", authHeader);
+            const authHeader = getAuthHeader(email, password);
+            localStorage.setItem("authHeader", authHeader);
 
-        onLoginSuccess(user);
+            onLoginSuccess(user);
 
-        if (user.role === 'ADMIN') navigate('/admin');
-        else if (user.role === 'TECHNICIAN') navigate('/technician');
-        else navigate('/employee');
-    } catch {
-        setError('Invalid email or password. Please try again.');
+            if (user.role === 'ADMIN') navigate('/admin');
+            else if (user.role === 'TECHNICIAN') navigate('/technician');
+            else navigate('/employee');
+        } catch {
+            setError('Invalid email or password. Please try again.');
+        }
     }
-}
+
     return (
-        <div className="login-page">
+        <AuthLayout
+            variant="login"
+            heroDescription={<>Manage your support requests and <br />streamline your workflow with TicketFlow.</>}
+            title="Welcome back"
+            subtitle="Sign in to your TicketFlow account"
+        >
+            <form onSubmit={handleSubmit} className="flex flex-col gap-[25px]">
+                <AuthInput
+                    variant="login"
+                    id="email"
+                    label="Email"
+                    iconText="✉"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
 
-            <section className="login-left">
+                <AuthInput
+                    variant="login"
+                    id="password"
+                    label="Password"
+                    Icon={LockIcon}
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
 
-                <div className="brand">
-                    <img src={logo} alt="TicketFlow Logo" className="brand-logo" />
-                </div>
+                <AuthError variant="login" message={error} />
 
-                <div className="hero-text">
-                    <h1>Manage tickets.<br />
-                        <span>Deliver solutions.</span>
-                    </h1>
-                    <p>Manage your support requests and <br />streamline your workflow with TicketFlow.</p>
-                </div>
-                <div className="decoration decoration-1"></div>
-                <div className="decoration decoration-2"></div>
-                <div className="dots"></div>
-            </section>
+                <AuthSubmitButton variant="login">
+                    Sign in
+                </AuthSubmitButton>
+            </form>
 
-            <section className="login-right">
-                <div className="login-card">
-                    <div className="login-header">
-                        <h2>Welcome back</h2>
-                        <p>Sign in to your TicketFlow account </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="login-form">
-                        <div className="input-container">
-                            <label htmlFor="email">Email</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon"> ✉ </span>
-                                <input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                            </div>
-                        </div>
-
-                        <div className="input-container">
-                            <label htmlFor="password">Password</label>
-                            <div className="input-wrapper">
-
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" className="input-icon"><path fill="currentColor" d="M6 22h12c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v2H6c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2M9 7c0-1.65 1.35-3 3-3s3 1.35 3 3v2H9zm-3 4h12v9H6z" /></svg>
-
-                                <input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                            </div>
-                        </div>
-
-                        {error && (<p className="error-message">{error}</p>)}
-                        <button type="submit" className="login-button">
-                            Sign in
-                        </button>
-                    </form>
-
-                    <div className="register-link">
-                        <span>Don't have an account?</span>
-                        <Link to="/register">Create account</Link>
-                    </div>
-                </div>
-            </section>
-        </div>
+            <AuthFooterLink variant="login" text="Don't have an account?" to="/register" linkText="Create account" />
+        </AuthLayout>
     );
 }
 
