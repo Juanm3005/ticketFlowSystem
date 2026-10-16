@@ -9,6 +9,8 @@ import TicketReports from "../components/tickets/TicketReports";
 import TicketStatusChart from "../components/tickets/TicketStatusChart";
 import { DashboardIcon, UsersIcon, TicketIcon, ReportsIcon } from "../components/icons/NavIcons";
 import RecentActivity from "../components/tickets/RecentActivity";
+import '.env';
+const API_URL = meta.env.VITE_API_URL;
 
 const NAV_ITEMS = [
     { id: "dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -114,7 +116,7 @@ function AdminDashboard() {
     useEffect(() => {
         const fetchTotalUsers = async () => {
             try {
-                const res = await fetch("http://localhost:8080/users", {
+                const res = await fetch(`${API_URL}/users`, {
                     headers: {
                         "Authorization": localStorage.getItem("authHeader")
                     }

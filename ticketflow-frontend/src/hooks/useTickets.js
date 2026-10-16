@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { createTicket, changeTicketState } from "../services/api";
+import '.env';
+const API_URL = meta.env.VITE_API_URL;
 
 // Trae los tickets y mantiene los contadores por estado
 export function useTickets() {
@@ -20,7 +22,7 @@ export function useTickets() {
     useEffect(() => {
         const fetchTotalTickets = async () => {
             try {
-                const res = await fetch("http://localhost:8080/tickets", {
+                const res = await fetch(`${API_URL}/tickets`, {
                     headers: {
                         "Authorization": localStorage.getItem("authHeader")
                     }

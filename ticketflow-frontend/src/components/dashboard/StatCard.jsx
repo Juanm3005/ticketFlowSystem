@@ -9,7 +9,7 @@ const ICON_COLORS = {
 function StatCard({ icon, color, label, value, showNote = false }) {
     return (
         <div className="min-h-[102px] flex items-center gap-[15px] p-[17px] bg-white border border-line rounded-[11px] shadow-card">
-            <div className={`w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-full text-[21px] text-white ${ICON_COLORS[color]}`}>
+            <div className={`w-[46px] h-[46px] shrink-0 flex items-center justify-center rounded-full text-[22px] text-white shadow-[0_6px_14px_rgba(28,43,75,0.18)] ${ICON_COLORS[color]}`}>
                 {icon}
             </div>
 
