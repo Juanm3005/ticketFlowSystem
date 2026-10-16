@@ -3,10 +3,11 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import TicketsSection from "../components/tickets/TicketsSection";
 import TicketReports from "../components/tickets/TicketReports";
 import TicketStatusChart from "../components/tickets/TicketStatusChart";
+import { TicketIcon, ReportsIcon } from "../components/icons/NavIcons";
 
 const NAV_ITEMS = [
-    { id: "tickets", label: "Tickets", icon: "▣" },
-    { id: "reports", label: "Reports", icon: "▥" },
+    { id: "tickets", label: "Tickets", icon: <TicketIcon /> },
+    { id: "reports", label: "Reports", icon: <ReportsIcon /> },
 ];
 
 function TechnicianDashboard() {

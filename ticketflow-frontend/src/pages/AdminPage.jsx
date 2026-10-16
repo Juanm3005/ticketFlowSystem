@@ -7,14 +7,14 @@ import UsersSection from "../components/users/UsersSection";
 import TicketsSection from "../components/tickets/TicketsSection";
 import TicketReports from "../components/tickets/TicketReports";
 import TicketStatusChart from "../components/tickets/TicketStatusChart";
+import { DashboardIcon, UsersIcon, TicketIcon, ReportsIcon } from "../components/icons/NavIcons";
 import RecentActivity from "../components/tickets/RecentActivity";
-import UserIcon from "../components/icons/UserIcon";
 
 const NAV_ITEMS = [
-    { id: "dashboard", label: "Dashboard", icon: "⌂" },
-    { id: "users", label: "Users", icon: <UserIcon /> },
-    { id: "tickets", label: "Tickets", icon: "▣" },
-    { id: "reports", label: "Reports", icon: "▥" },
+    { id: "dashboard", label: "Dashboard", icon: <DashboardIcon /> },
+    { id: "users", label: "Users", icon: <UsersIcon /> },
+    { id: "tickets", label: "Tickets", icon: <TicketIcon /> },
+    { id: "reports", label: "Reports", icon: <ReportsIcon /> },
 ];
 
 function AdminDashboard() {

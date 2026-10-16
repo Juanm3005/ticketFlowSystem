@@ -23,10 +23,10 @@ function DashboardLayout({ navItems, title, profileName, children }) {
                 onLogout={handleLogout}
             />
 
-            <main className="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden">
+            <main ref={contentRef} className="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden">
                 <DashboardHeader title={title} profileName={profileName} />
 
-                <div ref={contentRef} className="pt-[18px] px-6 pb-[30px] sm-down:p-3">
+                <div className="pt-[18px] px-6 pb-[30px] sm-down:p-3">
                     {children}
                 </div>
             </main>
